@@ -4,16 +4,16 @@ try:
     from airflow import DAG
     from airflow.operators.python_operator import PythonOperator
     from datetime import datetime
-    import pandas as pd
+
 
     print("All Dag modules are ok ......")
 except Exception as e:
     print("Error  {} ".format(e))
 
-
+from modules.test import test
 
 def first_function_execute(**context):
-
+    test()
     context['ti'].xcom_push(key='mykey', value="first_function_execute says Hello ")
 
 
