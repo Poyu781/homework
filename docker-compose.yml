@@ -13,7 +13,7 @@ services:
         max-file: "3"
 
   webserver:
-    build: ./dockerfiles
+    build: .
     restart: always
     depends_on:
       - postgres
@@ -26,7 +26,8 @@ services:
         max-file: "3"
     volumes:
       - ./dags:/usr/local/airflow/dags
-      # - ./plugins:/usr/local/airflow/plugins
+      - ./modules:/usr/local/airflow/modules
+      - ./snapask_crawl:/usr/local/airflow/snapask_crawl
     ports:
       - "8080:8080"
     command: webserver

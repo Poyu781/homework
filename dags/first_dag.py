@@ -11,19 +11,15 @@ except Exception as e:
     print("Error  {} ".format(e))
 
 
+
 def first_function_execute(**context):
-    print("first_function_execute   ")
+
     context['ti'].xcom_push(key='mykey', value="first_function_execute says Hello ")
+
 
 
 def second_function_execute(**context):
     instance = context.get("ti").xcom_pull(key="mykey")
-    data = [{"name":"Soumil","title":"Full Stack Software Engineer"}, { "name":"Nitin","title":"Full Stack Software Engineer"},]
-    df = pd.DataFrame(data=data)
-    print('@'*66)
-    print(df.head())
-    print('@'*66)
-
     print("I am in second_function_execute got value :{} from Function 1  ".format(instance))
 
 
