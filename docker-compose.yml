@@ -20,6 +20,7 @@ services:
     environment:
       - LOAD_EX=n
       - EXECUTOR=Local
+      - AIRFLOW__CORE__DEFAULT_TIMEZONE=Asia/Taipei 
     logging:
       options:
         max-size: 10m

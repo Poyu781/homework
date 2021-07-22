@@ -1,5 +1,7 @@
 import dotenv,os
+from pathlib import Path
 dotenv.load_dotenv()
-gcp_mysql_host = os.getenv("gcp_host")
-gcp_mysql_user = os.getenv("gcp_user")
-gcp_mysql_password = os.getenv("gcp_password")
+GCP_MYSQL_HOST = os.getenv("gcp_host")
+GCP_MYSQL_USER = os.getenv("gcp_user")
+GCP_MYSQL_PASSWORD = os.getenv("gcp_password")
+BASE_DIR = Path(__file__).resolve().parent
