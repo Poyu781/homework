@@ -1,0 +1,12 @@
+
+.git
+data/
+**/.DS_Store
+.vscode/
+__pycache__/
+*.gz
+*.ipynb
+*.log
+*.json
+Dockerfile
+docker-compose.yml
