@@ -1,10 +1,11 @@
 try:
-
-    from datetime import timedelta
+    # Airflow
     from airflow import DAG
     from airflow.operators.python_operator import PythonOperator
     from airflow.models import TaskInstance
+    # Modules
     from datetime import datetime
+    from datetime import timedelta
     import pendulum
     from snapask_crawl import crawl_tutors
     from modules.mail_notification import send_email
@@ -12,11 +13,15 @@ try:
 except Exception as e:
     print("Error  {} ".format(e))
 
-
 local_tz = pendulum.timezone("Asia/Taipei")
+default_args = { "owner": "poyu",
+                "retries": 1,
+                "retry_delay": timedelta(minutes=1),
+                "start_date": datetime(2021, 7, 21,tzinfo=local_tz)}
+
 
 def get_tutors_from_snapask(**context):
-    result = crawl_tutors.do_multiple_thread_to_store_data(crawl_tutors.fetch_tutors_data,2)
+    result = crawl_tutors.do_multiple_thread_to_store_data(crawl_tutors.fetch_tutors_data,15)
     context['ti'].xcom_push(key='crawl_result', value=result)
 
 
@@ -38,21 +43,19 @@ def check_status(**context):
     date = context['execution_date']
     ti = TaskInstance(filter_and_store_elite_tutor, date) #my_task is the task you defined within the DAG rather than the task_id (as in the example below: check_success_task rather than 'check_success_days_before') 
     state = ti.current_state()
-    if state != 'success':
+    if state == 'success':
+        title = f"Success Notification : tutor_elite_dag-{str(date)}"
+        text = "tutor_elite_dag have already done"
+    else :
         title = f"Fail Notification : tutor_elite_dag-{str(date)}"
         text = "tutor_elite_dag is failed,please check airflow"
-        send_email(title,text)
+    send_email(title,text)
 
 
 with DAG(
         dag_id="get_snapask_elite_tutor",
         schedule_interval="00 8 * * *",
-        default_args={
-            "owner": "poyu",
-            "retries": 1,
-            "retry_delay": timedelta(minutes=1),
-            "start_date": datetime(2021, 7, 21,tzinfo=local_tz),
-        },
+        default_args=default_args,
         catchup=False,
         ) as dag:
 
