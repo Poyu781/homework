@@ -76,10 +76,9 @@ def get_elite_tutors():
 
 
 if __name__ == "__main__":
-    print(today_date)
-    # do_multiple_thread_to_store_data(fetch_tutors_data,3)
-    # insert_tutors_info_mysql()
-    # get_elite_tutors()
+    do_multiple_thread_to_store_data(fetch_tutors_data,3)
+    insert_tutors_info_mysql()
+    get_elite_tutors()
 
 
 

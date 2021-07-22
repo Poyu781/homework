@@ -3,9 +3,11 @@ try:
     from datetime import timedelta
     from airflow import DAG
     from airflow.operators.python_operator import PythonOperator
+    from airflow.models import TaskInstance
     from datetime import datetime
     import pendulum
     from snapask_crawl import crawl_tutors
+    from modules.mail_notification import send_email
     print("All Dag modules are ok ......")
 except Exception as e:
     print("Error  {} ".format(e))
@@ -14,7 +16,7 @@ except Exception as e:
 local_tz = pendulum.timezone("Asia/Taipei")
 
 def get_tutors_from_snapask(**context):
-    result = crawl_tutors.do_multiple_thread_to_store_data(crawl_tutors.fetch_tutors_data,10)
+    result = crawl_tutors.do_multiple_thread_to_store_data(crawl_tutors.fetch_tutors_data,2)
     context['ti'].xcom_push(key='crawl_result', value=result)
 
 
@@ -32,12 +34,19 @@ def filter_and_store_elite_tutor(**context):
     if tutor_insert_result:
         crawl_tutors.get_elite_tutors()
         
-
+def check_status(**context):
+    date = context['execution_date']
+    ti = TaskInstance(filter_and_store_elite_tutor, date) #my_task is the task you defined within the DAG rather than the task_id (as in the example below: check_success_task rather than 'check_success_days_before') 
+    state = ti.current_state()
+    if state != 'success':
+        title = f"Fail Notification : tutor_elite_dag-{str(date)}"
+        text = "tutor_elite_dag is failed,please check airflow"
+        send_email(title,text)
 
 
 with DAG(
         dag_id="get_snapask_elite_tutor",
-        schedule_interval="20 20 * * *",
+        schedule_interval="00 8 * * *",
         default_args={
             "owner": "poyu",
             "retries": 1,
@@ -63,7 +72,13 @@ with DAG(
         python_callable=filter_and_store_elite_tutor,
         provide_context=True,
     )
+    check_status = PythonOperator(
+        task_id="check_status",
+        python_callable=check_status,
+        provide_context=True,
+        trigger_rule="all_done",
+    )
 
-get_tutors_from_snapask >> insert_tutors_into_mysql >> filter_and_store_elite_tutor
+get_tutors_from_snapask >> insert_tutors_into_mysql >> filter_and_store_elite_tutor >> check_status
 
 
