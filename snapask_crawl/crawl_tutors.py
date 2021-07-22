@@ -15,16 +15,17 @@ def fetch_tutors_data(url,collect_list):
 def do_multiple_thread_to_store_data(fun,loop_num):
     result_data_collections = []
     threads = []
-    for i in range(1,loop_num+1):
-        url = f"https://api.snapask.co/api/v3/web/tutor_list?region_name=tw&filter_name=&page={i}&lang=zh-TW"
+    for page in range(1,loop_num+1):
+        url = f"https://api.snapask.co/api/v3/web/tutor_list?region_name=tw&filter_name=&page={page}&lang=zh-TW"
         threads.append(threading.Thread(target = fun, args = (url,result_data_collections)))
         time.sleep(0.05)
         threads[-1].start()
-    for i in threads:
-        i.join()
+    for thread in threads:
+        thread.join()
     file_path = os.path.join(BASE_DIR, f'data/tutors_{str_today}.json')
-    with open(file_path,"w") as f :
+    with open(file_path,"a") as f :
         f.write(json.dumps(result_data_collections))
+    return True
 
 def insert_tutor_personal_info(data):
     tutors_info_insert_list = []
@@ -36,7 +37,7 @@ def insert_tutor_personal_info(data):
         single_rating_list = [tutor['id'],tutor['rating'],tutor['answered_count'],str_today]
         tutors_rating_insert_list.append(single_rating_list)
     snapask_db.bulk_execute("INSERT IGNORE INTO `tutors_basic_info`(`id`, `first_name`, `last_name`, `user_name`, `display_name`, `pic_url`, `school`) VALUES (%s,%s,%s,%s,%s,%s,%s)",tutors_info_insert_list)
-    snapask_db.bulk_execute("INSERT INTO `tutors_ratings`(`tutor_id`, `rating`, `answered_count`, `update_date`) VALUES (%s,%s,%s,%s)",tutors_rating_insert_list)
+    snapask_db.bulk_execute("INSERT IGNORE INTO `tutors_ratings`(`tutor_id`, `rating`, `answered_count`, `update_date`) VALUES (%s,%s,%s,%s)",tutors_rating_insert_list)
 
 def insert_tutor_subject_info(data):
     subject_set = set()
@@ -57,14 +58,14 @@ def insert_tutor_subject_info(data):
             insert_subject_relation_list.append([i[0],subject_dict[i[index]]])
     snapask_db.bulk_execute("INSERT IGNORE INTO `subject_tutor_relation`(`tutor_id`, `subject_id`) VALUES (%s,%s)",insert_subject_relation_list)
 
-def insert_tutors_into_mysql():
-    file_path = os.path.join(BASE_DIR, f'data/tutors_2021-07-21.json')
+def insert_tutors_info_mysql():
+    file_path = os.path.join(BASE_DIR, f'data/tutors_{str_today}.json')
     with open(file_path,"r") as f :
         data = f.read()
         json_tutors_data = json.loads(data)
     insert_tutor_personal_info(json_tutors_data)
     insert_tutor_subject_info(json_tutors_data)
-    
+    return True
 
 def get_elite_tutors():
     snapask_db = SQL(user=GCP_MYSQL_USER,password=GCP_MYSQL_PASSWORD,host=GCP_MYSQL_HOST,database="snapask")
@@ -74,7 +75,16 @@ def get_elite_tutors():
 
 
 if __name__ == "__main__":
-    # insert_data_into_mysql
+    do_multiple_thread_to_store_data(fetch_tutors_data,3)
+    insert_tutors_info_mysql()
+    get_elite_tutors()
+
+
+
+
+
+
+
 #     r = snapask_db.fetch_dict('''
 #     SELECT tutors_basic_info.id,tutors_basic_info.display_name,tutors_basic_info.pic_url,tutors_basic_info.school,tutors_ratings.rating,tutors_ratings.answered_count,answered_subject.subject_list 
 # FROM tutors_basic_info INNER JOIN tutors_ratings ON tutors_ratings.tutor_id = tutors_basic_info.id INNER JOIN
@@ -85,19 +95,8 @@ if __name__ == "__main__":
 # ON answered_subject.tutor_id = tutors_basic_info.id
 #     ''')
 
-    # insert_tutors_into_mysql()
 
-    # fetch_tutors_data()
-    # file_path = os.path.join(BASE_DIR, f'data/tutors_{str_today}.json')
-    # with open(file_path,"r") as f :
-    #     x = f.read()
-    #     r = json.loads(x)
-    #     print(r[0])
-    # do_multiple_thread_to_store_data(fetch_tutors_data,3)
-    # fetch_tutors_data(result_data_collections)
-    # fetch_tutors_data(result_data_collections)
-    # print(result_data_collections)
-
+# find elite tutor info
 # SELECT tutors_basic_info.id,tutors_basic_info.display_name,tutors_basic_info.pic_url,tutors_basic_info.school,tutors_ratings.rating,tutors_ratings.answered_count,answered_subject.subject_list 
 # FROM tutors_basic_info INNER JOIN tutors_ratings ON tutors_ratings.tutor_id = tutors_basic_info.id INNER JOIN
 # (SELECT subject_table.tutor_id,
@@ -105,3 +104,4 @@ if __name__ == "__main__":
 # FROM (SELECT subjects.subject_name ,subject_tutor_relation.tutor_id FROM subjects INNER JOIN subject_tutor_relation ON subjects.id = subject_tutor_relation.subject_id )AS subject_table 
 # GROUP BY subject_table.tutor_id) AS answered_subject
 # ON answered_subject.tutor_id = tutors_basic_info.id
+# WHERE tutors_basic_info.id in (SELECT tutor_id FROM elite_tutors)
