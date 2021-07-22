@@ -14,7 +14,7 @@ except Exception as e:
 local_tz = pendulum.timezone("Asia/Taipei")
 
 def get_tutors_from_snapask(**context):
-    result = crawl_tutors.do_multiple_thread_to_store_data(crawl_tutors.fetch_tutors_data,3)
+    result = crawl_tutors.do_multiple_thread_to_store_data(crawl_tutors.fetch_tutors_data,10)
     context['ti'].xcom_push(key='crawl_result', value=result)
 
 

@@ -4,8 +4,9 @@ from config import GCP_MYSQL_HOST,GCP_MYSQL_PASSWORD,GCP_MYSQL_USER,BASE_DIR
 import os,json
 import threading,time
 from datetime import datetime
-
-today_date = datetime.today().date()
+import pendulum
+local_tz = pendulum.timezone("Asia/Taipei")
+today_date = datetime.now(tz=local_tz).date()
 str_today = str(today_date)
 snapask_db = SQL(user=GCP_MYSQL_USER,password=GCP_MYSQL_PASSWORD,host=GCP_MYSQL_HOST,database="snapask")
 def fetch_tutors_data(url,collect_list):
@@ -75,9 +76,10 @@ def get_elite_tutors():
 
 
 if __name__ == "__main__":
-    do_multiple_thread_to_store_data(fetch_tutors_data,3)
-    insert_tutors_info_mysql()
-    get_elite_tutors()
+    print(today_date)
+    # do_multiple_thread_to_store_data(fetch_tutors_data,3)
+    # insert_tutors_info_mysql()
+    # get_elite_tutors()
 
 
 

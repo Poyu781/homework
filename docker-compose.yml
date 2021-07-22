@@ -7,10 +7,11 @@ services:
       - POSTGRES_USER=airflow
       - POSTGRES_PASSWORD=airflow
       - POSTGRES_DB=airflow
-    logging:
-      options:
-        max-size: 10m
-        max-file: "3"
+    # to set the limit of logging file in container
+    # logging:
+    #   options:
+    #     max-size: 10m
+    #     max-file: "3"
 
   webserver:
     build: .
@@ -21,10 +22,11 @@ services:
       - LOAD_EX=n
       - EXECUTOR=Local
       - DEFAULT_TIMEZONE=Asia/Taipei 
-    logging:
-      options:
-        max-size: 10m
-        max-file: "3"
+    # to set the limit of logging file in container
+    # logging:
+    #   options:
+    #     max-size: 10m
+    #     max-file: "3"
     ports:
       - "8080:8080"
     command: webserver
