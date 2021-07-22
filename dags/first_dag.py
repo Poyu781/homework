@@ -11,6 +11,8 @@ except Exception as e:
     print("Error  {} ".format(e))
 
 from modules.test import test
+import pendulum
+local_tz = pendulum.timezone("Asia/Taipei")
 
 def first_function_execute(**context):
     test()
@@ -25,14 +27,15 @@ def second_function_execute(**context):
 
 with DAG(
         dag_id="first_dag",
-        schedule_interval="@daily",
+        schedule_interval="52 10 * * *",
         default_args={
             "owner": "airflow",
             "retries": 1,
             "retry_delay": timedelta(minutes=5),
-            "start_date": datetime(2021, 1, 1),
+            "start_date": datetime(2021, 7, 21,tzinfo=local_tz),
         },
-        catchup=False) as f:
+        catchup=False,
+        ) as dag:
 
     first_function_execute = PythonOperator(
         task_id="first_function_execute",
