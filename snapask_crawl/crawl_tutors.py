@@ -24,7 +24,7 @@ def do_multiple_thread_to_store_data(fun,loop_num):
     for thread in threads:
         thread.join()
     file_path = os.path.join(BASE_DIR, f'data/tutors_{str_today}.json')
-    with open(file_path,"a") as f :
+    with open(file_path,"w") as f :
         f.write(json.dumps(result_data_collections))
     return True
 

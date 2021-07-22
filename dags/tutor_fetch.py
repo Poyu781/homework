@@ -1,17 +1,33 @@
 try:
     # Airflow
     from airflow import DAG
+    print(1)
     from airflow.operators.python_operator import PythonOperator
+    print(2)
     from airflow.models import TaskInstance
+    print(3)
     # Modules
-    from datetime import datetime
-    from datetime import timedelta
+    from datetime import datetime,timedelta
+    print(4)
     import pendulum
-    from snapask_crawl import crawl_tutors
+    print(5)
     from modules.mail_notification import send_email
+    
+    print(6)
+    from snapask_crawl import crawl_tutors
+    
+    print(7)
     print("All Dag modules are ok ......")
 except Exception as e:
-    print("Error  {} ".format(e))
+    error_class = e.__class__.__name__ #取得錯誤類型
+    detail = e.args[0] #取得詳細內容
+    cl, exc, tb = sys.exc_info() #取得Call Stack
+    lastCallStack = traceback.extract_tb(tb)[-1] #取得Call Stack的最後一筆資料
+    fileName = lastCallStack[0] #取得發生的檔案名稱
+    lineNum = lastCallStack[1] #取得發生的行號
+    funcName = lastCallStack[2] #取得發生的函數名稱
+    errMsg = "File \"{}\", line {}, in {}: [{}] {}".format(fileName, lineNum, funcName, error_class, detail)
+    print(errMsg)
 
 local_tz = pendulum.timezone("Asia/Taipei")
 default_args = { "owner": "poyu",
@@ -82,6 +98,6 @@ with DAG(
         trigger_rule="all_done",
     )
 
-get_tutors_from_snapask >> insert_tutors_into_mysql >> filter_and_store_elite_tutor >> check_status
+    get_tutors_from_snapask >> insert_tutors_into_mysql >> filter_and_store_elite_tutor >> check_status
 
 
