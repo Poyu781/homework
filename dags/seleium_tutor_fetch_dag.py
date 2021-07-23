@@ -1,21 +1,16 @@
 try:
     # Airflow
     from airflow import DAG
-    print(1)
     from airflow.operators.python_operator import PythonOperator
-    print(2)
     from airflow.models import TaskInstance
-    print(3)
     # Modules
     from datetime import datetime,timedelta
-    print(4)
     import pendulum
-    print(5)
     from modules.mail_notification import send_email
     
     print(6)
-    from snapask_crawl import crawl_tutors
-    
+    from snapask_crawl.crawl_tutors_by_selenium import crawl_tutor_by_selenium
+    from snapask_crawl.crawl_tutors_by_api import insert_tutors_info_mysql,get_elite_tutors
     print(7)
     print("All Dag modules are ok ......")
 except Exception as e:
@@ -37,7 +32,7 @@ default_args = { "owner": "poyu",
 
 
 def get_tutors_from_snapask(**context):
-    result = crawl_tutors.do_multiple_thread_to_store_data(crawl_tutors.fetch_tutors_data,15)
+    result = crawl_tutor_by_selenium(15)
     context['ti'].xcom_push(key='crawl_result', value=result)
 
 
@@ -45,7 +40,7 @@ def get_tutors_from_snapask(**context):
 def insert_tutors_into_mysql(**context):
     crawl_result = context.get("ti").xcom_pull(key="crawl_result")
     if crawl_result :
-        result = crawl_tutors.insert_tutors_info_mysql()
+        result = insert_tutors_info_mysql()
         context['ti'].xcom_push(key='insert_result', value=result)
     else:
         raise("It seems have some trouble when crawling")
@@ -53,7 +48,7 @@ def insert_tutors_into_mysql(**context):
 def filter_and_store_elite_tutor(**context):
     tutor_insert_result = context.get("ti").xcom_pull(key="insert_result")
     if tutor_insert_result:
-        crawl_tutors.get_elite_tutors()
+        get_elite_tutors()
         
 def check_status(**context):
     date = context['execution_date']
@@ -69,7 +64,7 @@ def check_status(**context):
 
 
 with DAG(
-        dag_id="get_snapask_elite_tutor",
+        dag_id="get_snapask_elite_tutor_selenium",
         schedule_interval="00 8 * * *",
         default_args=default_args,
         catchup=False,
