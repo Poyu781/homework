@@ -6,11 +6,12 @@ import smtplib
 from config import GMAIL_PASSWORD
 from datetime import datetime
 
-def send_email(title,text):
+
+def send_email(title, text):
     content = MIMEMultipart()  #建立MIMEMultipart物件
     content["subject"] = title  #郵件標題
     content["from"] = "v3708599@gmail.com"  #寄件者
-    content["to"] = "poyu850122@gmail.com" #收件者
+    content["to"] = "poyu850122@gmail.com"  #收件者
     content.attach(MIMEText(text))  #郵件內容
     with smtplib.SMTP(host="smtp.gmail.com", port="587") as smtp:  # 設定SMTP伺服器
         try:
@@ -21,5 +22,7 @@ def send_email(title,text):
             print("Complete!")
         except Exception as e:
             print("Error message: ", e)
+
+
 if __name__ == "__main__":
-    send_email("3","3")
+    send_email("3", "3")
